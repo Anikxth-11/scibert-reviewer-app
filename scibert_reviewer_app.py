@@ -29,7 +29,6 @@ def pdf_to_text(path: str) -> str:
 
 @st.cache_resource
 def load_scibert(model_name: str = "allenai/scibert_scivocab_uncased", use_safetensors: bool = False):
-    st.toast(f"Loading SciBERT model '{model_name}'...")
     print(f"[INFO] Loading SciBERT model '{model_name}'...")
     tokenizer = AutoTokenizer.from_pretrained(model_name)
     try:
@@ -42,7 +41,6 @@ def load_scibert(model_name: str = "allenai/scibert_scivocab_uncased", use_safet
         model = AutoModel.from_pretrained(model_name)
     model.eval()
     print("[INFO] Model loading complete.")
-    st.toast("Model loaded successfully!")
     return tokenizer, model
 
 
@@ -78,7 +76,6 @@ def build_dataset_embeddings(dataset_dir: str,
                              _model,
                              device="cpu",
                              cache_path: str = "scibert_embeddings_cache.npz") -> Tuple[Dict[str, List[str]], Dict[str, np.ndarray]]:
-    st.toast(f"Loading dataset embeddings from '{cache_path}'...")
     print(f"[INFO] Building/Loading dataset embeddings for {dataset_dir}")
     dataset_dir = Path(dataset_dir)
     author_to_papers = {}
@@ -97,7 +94,6 @@ def build_dataset_embeddings(dataset_dir: str,
             paper_embeddings = {k: cache[k].item() for k in cache.files}
             paper_embeddings = {p: (np.array(v) if not isinstance(v, np.ndarray) else v) for p, v in paper_embeddings.items()}
             print("[INFO] Cache loaded successfully.")
-            st.toast("Dataset cache loaded!")
             return author_to_papers, paper_embeddings
         except Exception as e:
             print(f"[WARN] Failed loading cache ({e}), will recompute.")
@@ -127,7 +123,6 @@ def build_dataset_embeddings(dataset_dir: str,
             progress_bar.progress(paper_count / total_papers, text=f"Computing: {os.path.basename(paper)}")
 
     progress_bar.empty()
-    st.toast("Dataset embedding computation complete!")
 
     try:
         np.savez_compressed(cache_path, **{p: paper_embeddings[p] for p in paper_embeddings})
@@ -158,7 +153,7 @@ def compute_all_paper_similarities(query_emb: np.ndarray,
 def rank_authors_by_topN(author_sims: Dict[str, List[Tuple[str, float]]], topN: int = 3) -> List[Tuple[str, float, List[Tuple[str, float]]]]:
     author_scores = {}
     author_top_papers = {}
-    for author, sims in author_sims.items():
+    for author, sims in author_s.items():
         sims_sorted = sorted(sims, key=lambda x: x[1], reverse=True)
         top_n = sims_sorted[:min(topN, len(sims_sorted))]
         score = float(np.mean([s for (_, s) in top_n]))
@@ -216,13 +211,18 @@ def main_app():
 
     if uploaded_file is not None:
         
+        st.toast(f"Loading SciBERT model...")
         tokenizer, model = load_scibert(use_safetensors=use_safetensors)
+        st.toast("Model loaded successfully!")
+        
         if device.startswith("cuda"):
             model.to(device)
 
+        st.toast(f"Loading dataset embeddings from '{cache_path}'...")
         author_to_papers, paper_embeddings = build_dataset_embeddings(
             dataset_dir, tokenizer, model, device=device, cache_path=cache_path
         )
+        st.toast("Dataset embeddings loaded!")
         
         if not paper_embeddings:
             st.error("No paper embeddings were found or computed. Please check your dataset directory path and permissions.")
