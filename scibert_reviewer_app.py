@@ -154,9 +154,7 @@ def rank_authors_by_topN(author_sims: Dict[str, List[Tuple[str, float]]], topN: 
     author_scores = {}
     author_top_papers = {}
     
-    # --- THIS LINE IS FIXED ---
     for author, sims in author_sims.items():
-    # --- END FIX ---
     
         sims_sorted = sorted(sims, key=lambda x: x[1], reverse=True)
         top_n = sims_sorted[:min(topN, len(sims_sorted))]
@@ -191,13 +189,11 @@ def main_app():
 
     st.sidebar.header("Configuration")
     
-    # --- THIS LINE IS FIXED ---
     dataset_dir = st.sidebar.text_input(
         "Dataset Directory",
-        value="assignment 1 dataset",  # <--- Use relative path
+        value="assignment 1 dataset",
         help="Path to the directory containing author subfolders."
     )
-    # --- END FIX ---
     
     cache_path = st.sidebar.text_input(
         "Embeddings Cache File",
@@ -219,7 +215,6 @@ def main_app():
 
     if uploaded_file is not None:
         
-        # --- TOASTS MOVED HERE ---
         st.toast(f"Loading SciBERT model...")
         tokenizer, model = load_scibert(use_safetensors=use_safetensors)
         st.toast("Model loaded successfully!")
@@ -227,7 +222,6 @@ def main_app():
         if device.startswith("cuda"):
             model.to(device)
 
-        # --- TOASTS MOVED HERE ---
         st.toast(f"Loading dataset embeddings from '{cache_path}'...")
         author_to_papers, paper_embeddings = build_dataset_embeddings(
             dataset_dir, tokenizer, model, device=device, cache_path=cache_path
