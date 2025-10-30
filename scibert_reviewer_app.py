@@ -153,7 +153,11 @@ def compute_all_paper_similarities(query_emb: np.ndarray,
 def rank_authors_by_topN(author_sims: Dict[str, List[Tuple[str, float]]], topN: int = 3) -> List[Tuple[str, float, List[Tuple[str, float]]]]:
     author_scores = {}
     author_top_papers = {}
-    for author, sims in author_s.items():
+    
+    # --- THIS LINE IS FIXED ---
+    for author, sims in author_sims.items():
+    # --- END FIX ---
+    
         sims_sorted = sorted(sims, key=lambda x: x[1], reverse=True)
         top_n = sims_sorted[:min(topN, len(sims_sorted))]
         score = float(np.mean([s for (_, s) in top_n]))
@@ -186,11 +190,15 @@ def main_app():
     st.markdown("Upload a query PDF to find the most relevant reviewers from the dataset.")
 
     st.sidebar.header("Configuration")
+    
+    # --- THIS LINE IS FIXED ---
     dataset_dir = st.sidebar.text_input(
         "Dataset Directory",
-        value=r"C:\Users\Aniketh\Documents\Applied AI\assignment 1 dataset",
+        value="assignment 1 dataset",  # <--- Use relative path
         help="Path to the directory containing author subfolders."
     )
+    # --- END FIX ---
+    
     cache_path = st.sidebar.text_input(
         "Embeddings Cache File",
         value="scibert_embeddings_cache.npz",
@@ -211,6 +219,7 @@ def main_app():
 
     if uploaded_file is not None:
         
+        # --- TOASTS MOVED HERE ---
         st.toast(f"Loading SciBERT model...")
         tokenizer, model = load_scibert(use_safetensors=use_safetensors)
         st.toast("Model loaded successfully!")
@@ -218,6 +227,7 @@ def main_app():
         if device.startswith("cuda"):
             model.to(device)
 
+        # --- TOASTS MOVED HERE ---
         st.toast(f"Loading dataset embeddings from '{cache_path}'...")
         author_to_papers, paper_embeddings = build_dataset_embeddings(
             dataset_dir, tokenizer, model, device=device, cache_path=cache_path
