@@ -1,0 +1,7 @@
+streamlit
+numpy
+torch
+transformers
+scikit-learn
+PyPDF2
+tqdm
